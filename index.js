@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
 
 // middleware
 app.use(cors());
@@ -27,6 +27,17 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    //     collection
+    const cofeeCollection = client.db("cofeeDB").collection("cofee");
+
+    app.post("/cofee", async (req, res) => {
+      const newCofee = req.body;
+      console.log(newCofee);
+      const result = await cofeeCollection.insertOne(newCofee);
+      res.send(result);
+    });
+    const coffeeCollection = client.db("coffeeDB").collection("coffee");
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
@@ -34,7 +45,7 @@ async function run() {
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    //     await client.close();
   }
 }
 run().catch(console.dir);
@@ -44,5 +55,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`cofee server is running on port${port}`);
+  console.log(`cofee server is running on port ${port}`);
 });
