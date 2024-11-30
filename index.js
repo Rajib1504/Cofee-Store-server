@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -29,15 +29,55 @@ async function run() {
     await client.connect();
     //     collection
     const cofeeCollection = client.db("cofeeDB").collection("cofee");
+    //  all cofees(get )
+    app.get("/cofee", async (req, res) => {
+      const cursor = cofeeCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+    // find cofee
+    app.get("/cofee/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await cofeeCollection.findOne(query);
+      res.send(result);
+    });
 
+    // create cofee
     app.post("/cofee", async (req, res) => {
       const newCofee = req.body;
       console.log(newCofee);
       const result = await cofeeCollection.insertOne(newCofee);
       res.send(result);
     });
-    const coffeeCollection = client.db("coffeeDB").collection("coffee");
-
+    // put
+    app.put("/cofee/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedCofee = req.body;
+      const cofee = {
+        $set: {
+          price: updatedCofee.price,
+          photo: updatedCofee.photo,
+          details: updatedCofee.details,
+          category: updatedCofee.category,
+          taste: updatedCofee.taste,
+          supplier: updatedCofee.supplier,
+          name: updatedCofee.name,
+          chef: updatedCofee.chef,
+        },
+      };
+      const result = await cofeeCollection.updateOne(filter, cofee, options);
+      res.send(result);
+    });
+    // delete
+    app.delete("/cofee/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }; // we try to figure out the path by which we want to find then objectId from mongodb with the new keyword then we send the id which we create
+      const result = await cofeeCollection.deleteOne(query);
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
